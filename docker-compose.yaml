@@ -1,0 +1,56 @@
+version: '3.6'
+services:
+  mysql-master:
+    env_file:
+    - ./master/.env
+    image: mysql/mysql-server:8.0.11
+    ports:
+    - "3306:3306"
+    volumes:
+    - "mysql-master:/var/lib/mysql"
+    - "./master/init.sql:/init.sql"
+    configs:
+    - source: master
+      target: /usr/etc/my.cnf
+      uid: '27'
+      gid: '27'
+      mode: 0440
+    deploy:
+      replicas: 1
+      restart_policy:
+        max_attempts: 3
+        condition: on-failure
+    networks:
+    - mysql
+  mysql-slave:
+    env_file:
+    - ./slave/.env
+    image: mysql/mysql-server:8.0.11
+    ports:
+    - "3307:3306"
+    volumes:
+    - "mysql-slave:/var/lib/mysql"
+    - "./slave/init.sql:/init.sql"
+    configs:
+    - source: slave
+      target: /usr/etc/my.cnf
+      uid: '27'
+      gid: '27'
+      mode: 0440
+    deploy:
+      replicas: 1
+      restart_policy:
+        max_attempts: 3
+        condition: on-failure
+    networks:
+    - mysql
+networks:
+  mysql: {}
+configs: 
+  master:
+    file: ./master/conf.d/mysql.cnf
+  slave:
+    file: ./slave/conf.d/mysql.cnf
+volumes:
+  mysql-master:
+  mysql-slave:
